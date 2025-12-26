@@ -22,6 +22,9 @@ simple-app/
 │   └── patches/
 │       ├── deployment-replicas.yaml
 │       └── add-label.yaml
+├── expected-output/              # Expected final output after plugin processing
+│   ├── deployment.yaml           # Deployment with patches applied
+│   └── service.yaml              # Service (unchanged)
 └── templates/
     ├── deployment.yaml           # Basic nginx deployment
     ├── service.yaml              # ClusterIP service
@@ -47,3 +50,12 @@ simple-app/
    - Deployment has 3 replicas (patched by kustomize)
    - Deployment has additional `environment: production` label
    - No KustomizeFiles resource in final output
+
+## Expected Output
+
+The `expected-output/` directory contains the final resources as they should appear after the plugin processes them. This shows:
+
+- **deployment.yaml**: The deployment with all kustomize patches applied
+  - `replicas: 3` (increased from 1)
+  - `environment: production` label added to metadata
+- **service.yaml**: The service unchanged (no patches target it)
