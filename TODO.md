@@ -16,6 +16,7 @@
 
 ### File Extraction
 - [ ] Implement extraction of embedded files from special resource
+- [ ] Security: disallow directory traversal bugs when extracting files
 - [ ] Create temporary folder management for extracted files
 - [ ] Handle file permissions and directory structure preservation
 
@@ -58,16 +59,16 @@
 
 - [ ] Write README with installation instructions
 - [ ] Document the special resource format/schema
-- [ ] Create usage examples
+- [x] Create usage examples
 - [ ] Document configuration options
 - [ ] Add troubleshooting guide
 
 ## Examples & Samples
 
-- [ ] Create example Helm chart with embedded kustomize files
-- [ ] Create example kustomization.yaml
-- [ ] Create example overlays/patches
-- [ ] Document example use cases
+- [x] Create example Helm chart with embedded kustomize files
+- [x] Create example kustomization.yaml
+- [x] Create example overlays/patches
+- [x] Document example use cases
 
 ## Build & Distribution
 

@@ -1,0 +1,28 @@
+apiVersion: helm.kustomize.plugin/v1alpha1
+kind: KustomizeFiles
+metadata:
+  name: kustomize-files
+files:
+  kustomization.yaml: |
+    resources:
+    - all.yaml
+
+    patches:
+    - path: patches/deployment-replicas.yaml
+    - path: patches/add-label.yaml
+
+  patches/deployment-replicas.yaml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: simple-app
+    spec:
+      replicas: 3
+
+  patches/add-label.yaml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: simple-app
+      labels:
+        environment: production
