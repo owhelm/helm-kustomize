@@ -29,7 +29,6 @@ func ParseKustomization(data []byte) (*Kustomization, error) {
 	}
 
 	// Extract resources if present
-	// @todo can't Go/Yaml parser do all of this for us?
 	if resourcesRaw, ok := raw["resources"]; ok {
 		if resourcesList, ok := resourcesRaw.([]any); ok {
 			k.Resources = make([]string, 0, len(resourcesList))

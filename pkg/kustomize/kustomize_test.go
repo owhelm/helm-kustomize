@@ -60,7 +60,6 @@ commonLabels:
 			}
 
 			if err == nil {
-				// @todo doesn't Go have a simpler way to assert this?
 				if len(k.Resources) != len(tt.wantRes) {
 					t.Errorf("ParseKustomization() got %d resources, want %d", len(k.Resources), len(tt.wantRes))
 					return
@@ -149,7 +148,6 @@ func TestKustomization_Marshal(t *testing.T) {
 		Resources: []string{"all.yaml", "base.yaml"},
 		RawContent: map[string]any{
 			"resources": []string{"all.yaml", "base.yaml"},
-			// @todo we really need to stop using `commonLabels` in examples - it is a deprecated field
 			"commonLabels": map[string]any{
 				"app": "myapp",
 			},
@@ -261,7 +259,6 @@ patches:
 
 	str := string(updated)
 
-	// @todo we should assert the final YAML output here
 	// Should preserve all original fields
 	expectedFields := []string{"apiVersion", "kind", "commonLabels", "patches", "app", "myapp"}
 	for _, field := range expectedFields {
