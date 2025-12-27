@@ -55,6 +55,8 @@
 - [ ] Create integration tests with sample Helm charts
 - [ ] Create end-to-end tests with actual Helm installation
 - [ ] Add test fixtures and sample charts
+- [ ] Makefile: use custom `HELM_PLUGINS` path when testing
+- [ ] Makefile: add shortcut to verify the example simple-app
 
 ## Documentation
 
