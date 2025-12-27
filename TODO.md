@@ -17,6 +17,7 @@
 ### File Extraction
 - [ ] Implement extraction of embedded files from special resource
 - [ ] Security: disallow directory traversal bugs when extracting files
+- [ ] Security: validate absolute Windows paths
 - [ ] Create temporary folder management for extracted files
 - [ ] Handle file permissions and directory structure preservation
 
