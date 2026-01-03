@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/owhelm/helm-kustomize-plugin/pkg/extractor"
-	"github.com/owhelm/helm-kustomize-plugin/pkg/kustomize"
-	"github.com/owhelm/helm-kustomize-plugin/pkg/parser"
+	"github.com/owhelm/helm-kustomize-plugin/internal/extractor"
+	"github.com/owhelm/helm-kustomize-plugin/internal/kustomize"
+	"github.com/owhelm/helm-kustomize-plugin/internal/parser"
 )
 
 func main() {
