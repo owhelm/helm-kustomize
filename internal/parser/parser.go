@@ -25,7 +25,6 @@ type KustomizePluginData struct {
 type ParseResult struct {
 	KustomizePluginData *KustomizePluginData
 	OtherResources      []map[string]any
-	RawOthers           [][]byte // Raw YAML bytes for other resources
 }
 
 // IsKustomizePluginDataResource checks if a resource is a KustomizePluginData resource
@@ -47,7 +46,6 @@ func IsKustomizePluginDataResource(resource map[string]any) bool {
 func ParseManifests(data []byte) (*ParseResult, error) {
 	result := &ParseResult{
 		OtherResources: make([]map[string]any, 0),
-		RawOthers:      make([][]byte, 0),
 	}
 
 	// Split by YAML document separator
@@ -89,13 +87,6 @@ func ParseManifests(data []byte) (*ParseResult, error) {
 		} else {
 			// Keep as generic resource
 			result.OtherResources = append(result.OtherResources, doc)
-
-			// Also keep raw bytes for exact reproduction
-			docBytes, err := yaml.Marshal(doc)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal resource: %w", err)
-			}
-			result.RawOthers = append(result.RawOthers, docBytes)
 		}
 	}
 

@@ -108,10 +108,6 @@ metadata:
 	if len(result.OtherResources) != 2 {
 		t.Errorf("Expected 2 OtherResources, got %d", len(result.OtherResources))
 	}
-
-	if len(result.RawOthers) != 2 {
-		t.Errorf("Expected 2 RawOthers, got %d", len(result.RawOthers))
-	}
 }
 
 func TestParseManifests_WithKustomizePluginData(t *testing.T) {
@@ -171,10 +167,6 @@ metadata:
 	// Should have 2 other resources (Service and Deployment)
 	if len(result.OtherResources) != 2 {
 		t.Errorf("Expected 2 OtherResources, got %d", len(result.OtherResources))
-	}
-
-	if len(result.RawOthers) != 2 {
-		t.Errorf("Expected 2 RawOthers, got %d", len(result.RawOthers))
 	}
 }
 
