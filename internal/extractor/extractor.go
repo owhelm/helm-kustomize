@@ -56,23 +56,8 @@ func ValidatePath(filePath string) error {
 // ExtractFiles writes files from the files map to the temporary directory
 func (t *TempDir) ExtractFiles(files map[string]string) error {
 	for filePath, content := range files {
-		// Validate the path to prevent directory traversal
-		if err := ValidatePath(filePath); err != nil {
+		if err := t.WriteFile(filePath, []byte(content)); err != nil {
 			return err
-		}
-
-		// Create full path within temp directory
-		fullPath := filepath.Join(t.Path, filePath)
-
-		// Create directory structure if needed
-		dir := filepath.Dir(fullPath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory %s: %w", dir, err)
-		}
-
-		// Write file content
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
-			return fmt.Errorf("failed to write file %s: %w", filePath, err)
 		}
 	}
 
