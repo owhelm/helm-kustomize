@@ -37,9 +37,7 @@ func TestTempDir_Cleanup(t *testing.T) {
 	}
 
 	// Cleanup
-	if err := tempDir.Cleanup(); err != nil {
-		t.Errorf("Cleanup() error = %v, want nil", err)
-	}
+	tempDir.Cleanup()
 
 	// Verify directory no longer exists
 	if _, err := os.Stat(path); !os.IsNotExist(err) {

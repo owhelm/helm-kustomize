@@ -22,17 +22,17 @@ func NewTempDir() (*TempDir, error) {
 	return &TempDir{Path: path}, nil
 }
 
-// Cleanup removes the temporary directory and all its contents
-func (t *TempDir) Cleanup() error {
+// Cleanup removes the temporary directory and all its contents.
+// If cleanup fails, it prints a warning to stderr but does not return an error,
+// as the OS should eventually clean up temporary files.
+func (t *TempDir) Cleanup() {
 	if t.Path == "" {
-		return nil
+		return
 	}
 
 	if err := os.RemoveAll(t.Path); err != nil {
-		return fmt.Errorf("failed to cleanup temp directory: %w", err)
+		fmt.Fprintf(os.Stderr, "Warning: failed to cleanup temp directory %s: %v\n", t.Path, err)
 	}
-
-	return nil
 }
 
 // ValidatePath checks if a file path is safe (prevents directory traversal)
