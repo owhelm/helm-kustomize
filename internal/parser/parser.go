@@ -95,19 +95,21 @@ func ParseManifests(data []byte) (*ParseResult, error) {
 
 // MarshalResources converts resources back to YAML format
 func MarshalResources(resources []map[string]any) ([]byte, error) {
+	if len(resources) == 0 {
+		return []byte{}, nil
+	}
+
 	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
 
-	for i, resource := range resources {
-		if i > 0 {
-			buf.WriteString("---\n")
+	for _, resource := range resources {
+		if err := encoder.Encode(resource); err != nil {
+			return nil, fmt.Errorf("failed to encode resource: %w", err)
 		}
+	}
 
-		data, err := yaml.Marshal(resource)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal resource: %w", err)
-		}
-
-		buf.Write(data)
+	if err := encoder.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close encoder: %w", err)
 	}
 
 	return buf.Bytes(), nil
