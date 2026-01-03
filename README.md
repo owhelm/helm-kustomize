@@ -28,7 +28,7 @@ The plugin uses a custom Kubernetes resource to embed kustomize files within a H
 
 ```yaml
 apiVersion: helm.kustomize.plugin/v1alpha1
-kind: KustomizeFiles
+kind: KustomizePluginData
 metadata:
   name: kustomize-files
 files:
@@ -54,7 +54,7 @@ files:
 ### Field Descriptions
 
 - **apiVersion**: Must be `helm.kustomize.plugin/v1alpha1`
-- **kind**: Must be `KustomizeFiles`
+- **kind**: Must be `KustomizePluginData`
 - **metadata.name**: Identifier for the resource (can be any valid Kubernetes name)
 - **files**: A map where keys are file paths and values are file contents
   - File paths can include directories (e.g., `overlays/production/patch.yaml`)
@@ -81,7 +81,7 @@ When extracted, the plugin will create the appropriate directory structure in th
 
 ### Requirements
 
-1. The resource must have `apiVersion: helm.kustomize.plugin/v1alpha1` and `kind: KustomizeFiles`
+1. The resource must have `apiVersion: helm.kustomize.plugin/v1alpha1` and `kind: KustomizePluginData`
 2. At least one file must be specified in the `files` map
 3. A `kustomization.yaml` file should be present in the root (though kustomize can work with nested kustomizations)
 4. File contents must be valid YAML or appropriate format for kustomize processing
@@ -89,7 +89,7 @@ When extracted, the plugin will create the appropriate directory structure in th
 ### Notes
 
 - This resource is automatically removed from the final chart output after processing
-- Multiple `KustomizeFiles` resources in a single chart are not currently supported
+- Multiple `KustomizePluginData` resources in a single chart are not currently supported
 - The resource is processed before the final render, so kustomize transformations are applied to all chart resources
 
 ## Use Cases

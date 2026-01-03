@@ -1,5 +1,5 @@
-apiVersion: helm.kustomize.plugin/v1alpha1
-kind: KustomizeFiles
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
 metadata:
   name: kustomize-files
 files:

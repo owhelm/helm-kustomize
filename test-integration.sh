@@ -36,12 +36,12 @@ else
   FAILED=1
 fi
 
-# Check 3: KustomizeFiles resource should NOT be in output
-if echo "$OUTPUT" | grep -q "kind: KustomizeFiles"; then
-  echo "✗ FAILED: KustomizeFiles resource found in output (should be removed)"
+# Check 3: KustomizePluginData resource should NOT be in output
+if echo "$OUTPUT" | grep -q "kind: KustomizePluginData"; then
+  echo "✗ FAILED: KustomizePluginData resource found in output (should be removed)"
   FAILED=1
 else
-  echo "✓ KustomizeFiles resource removed from output"
+  echo "✓ KustomizePluginData resource removed from output"
 fi
 
 # Check 4: Service should still be present

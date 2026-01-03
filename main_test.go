@@ -7,7 +7,7 @@ import (
 )
 
 func TestKustomizePostRenderer_Run_PassThrough(t *testing.T) {
-	// Test that manifests without KustomizeFiles are passed through unchanged
+	// Test that manifests without KustomizePluginData are passed through unchanged
 	input := bytes.NewBufferString(`---
 apiVersion: v1
 kind: Service

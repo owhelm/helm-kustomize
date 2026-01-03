@@ -5,17 +5,17 @@ import (
 	"testing"
 )
 
-func TestIsKustomizeFilesResource(t *testing.T) {
+func TestIsKustomizePluginDataResource(t *testing.T) {
 	tests := []struct {
 		name     string
 		resource map[string]any
 		want     bool
 	}{
 		{
-			name: "valid KustomizeFiles resource",
+			name: "valid KustomizePluginData resource",
 			resource: map[string]any{
-				"apiVersion": "helm.kustomize.plugin/v1alpha1",
-				"kind":       "KustomizeFiles",
+				"apiVersion": APIVersion,
+				"kind":       Kind,
 			},
 			want: true,
 		},
@@ -23,14 +23,14 @@ func TestIsKustomizeFilesResource(t *testing.T) {
 			name: "wrong apiVersion",
 			resource: map[string]any{
 				"apiVersion": "v1",
-				"kind":       "KustomizeFiles",
+				"kind":       Kind,
 			},
 			want: false,
 		},
 		{
 			name: "wrong kind",
 			resource: map[string]any{
-				"apiVersion": "helm.kustomize.plugin/v1alpha1",
+				"apiVersion": APIVersion,
 				"kind":       "ConfigMap",
 			},
 			want: false,
@@ -38,14 +38,14 @@ func TestIsKustomizeFilesResource(t *testing.T) {
 		{
 			name: "missing apiVersion",
 			resource: map[string]any{
-				"kind": "KustomizeFiles",
+				"kind": Kind,
 			},
 			want: false,
 		},
 		{
 			name: "missing kind",
 			resource: map[string]any{
-				"apiVersion": "helm.kustomize.plugin/v1alpha1",
+				"apiVersion": APIVersion,
 			},
 			want: false,
 		},
@@ -58,9 +58,9 @@ func TestIsKustomizeFilesResource(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IsKustomizeFilesResource(tt.resource)
+			got := IsKustomizePluginDataResource(tt.resource)
 			if got != tt.want {
-				t.Errorf("IsKustomizeFilesResource() = %v, want %v", got, tt.want)
+				t.Errorf("IsKustomizePluginDataResource() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -74,8 +74,8 @@ func TestParseManifests_EmptyInput(t *testing.T) {
 		t.Fatalf("ParseManifests() error = %v, want nil", err)
 	}
 
-	if result.KustomizeFiles != nil {
-		t.Errorf("Expected no KustomizeFiles, got %v", result.KustomizeFiles)
+	if result.KustomizePluginData != nil {
+		t.Errorf("Expected no KustomizePluginData, got %v", result.KustomizePluginData)
 	}
 
 	if len(result.OtherResources) != 0 {
@@ -83,7 +83,7 @@ func TestParseManifests_EmptyInput(t *testing.T) {
 	}
 }
 
-func TestParseManifests_NoKustomizeFiles(t *testing.T) {
+func TestParseManifests_NoKustomizePluginData(t *testing.T) {
 	input := []byte(`---
 apiVersion: v1
 kind: Service
@@ -101,8 +101,8 @@ metadata:
 		t.Fatalf("ParseManifests() error = %v, want nil", err)
 	}
 
-	if result.KustomizeFiles != nil {
-		t.Errorf("Expected no KustomizeFiles, got %v", result.KustomizeFiles)
+	if result.KustomizePluginData != nil {
+		t.Errorf("Expected no KustomizePluginData, got %v", result.KustomizePluginData)
 	}
 
 	if len(result.OtherResources) != 2 {
@@ -114,15 +114,15 @@ metadata:
 	}
 }
 
-func TestParseManifests_WithKustomizeFiles(t *testing.T) {
+func TestParseManifests_WithKustomizePluginData(t *testing.T) {
 	input := []byte(`---
 apiVersion: v1
 kind: Service
 metadata:
   name: test-service
 ---
-apiVersion: helm.kustomize.plugin/v1alpha1
-kind: KustomizeFiles
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
 metadata:
   name: kustomize-files
 files:
@@ -144,27 +144,27 @@ metadata:
 		t.Fatalf("ParseManifests() error = %v, want nil", err)
 	}
 
-	if result.KustomizeFiles == nil {
-		t.Fatal("Expected KustomizeFiles, got nil")
+	if result.KustomizePluginData == nil {
+		t.Fatal("Expected KustomizePluginData, got nil")
 	}
 
-	if result.KustomizeFiles.APIVersion != "helm.kustomize.plugin/v1alpha1" {
-		t.Errorf("Expected apiVersion helm.kustomize.plugin/v1alpha1, got %s", result.KustomizeFiles.APIVersion)
+	if result.KustomizePluginData.APIVersion != APIVersion {
+		t.Errorf("Expected apiVersion %s, got %s", APIVersion, result.KustomizePluginData.APIVersion)
 	}
 
-	if result.KustomizeFiles.Kind != "KustomizeFiles" {
-		t.Errorf("Expected kind KustomizeFiles, got %s", result.KustomizeFiles.Kind)
+	if result.KustomizePluginData.Kind != Kind {
+		t.Errorf("Expected kind %s, got %s", Kind, result.KustomizePluginData.Kind)
 	}
 
-	if len(result.KustomizeFiles.Files) != 2 {
-		t.Errorf("Expected 2 files, got %d", len(result.KustomizeFiles.Files))
+	if len(result.KustomizePluginData.Files) != 2 {
+		t.Errorf("Expected 2 files, got %d", len(result.KustomizePluginData.Files))
 	}
 
-	if _, ok := result.KustomizeFiles.Files["kustomization.yaml"]; !ok {
+	if _, ok := result.KustomizePluginData.Files["kustomization.yaml"]; !ok {
 		t.Error("Expected kustomization.yaml file")
 	}
 
-	if _, ok := result.KustomizeFiles.Files["patch.yaml"]; !ok {
+	if _, ok := result.KustomizePluginData.Files["patch.yaml"]; !ok {
 		t.Error("Expected patch.yaml file")
 	}
 
@@ -178,17 +178,17 @@ metadata:
 	}
 }
 
-func TestParseManifests_MultipleKustomizeFiles(t *testing.T) {
+func TestParseManifests_MultipleKustomizePluginData(t *testing.T) {
 	input := []byte(`---
-apiVersion: helm.kustomize.plugin/v1alpha1
-kind: KustomizeFiles
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
 metadata:
   name: first
 files:
   file1.yaml: content1
 ---
-apiVersion: helm.kustomize.plugin/v1alpha1
-kind: KustomizeFiles
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
 metadata:
   name: second
 files:
@@ -197,11 +197,11 @@ files:
 
 	_, err := ParseManifests(input)
 	if err == nil {
-		t.Fatal("Expected error for multiple KustomizeFiles, got nil")
+		t.Fatal("Expected error for multiple KustomizePluginData, got nil")
 	}
 
-	if !strings.Contains(err.Error(), "multiple KustomizeFiles") {
-		t.Errorf("Expected error about multiple KustomizeFiles, got: %v", err)
+	if !strings.Contains(err.Error(), "multiple KustomizePluginData") {
+		t.Errorf("Expected error about multiple KustomizePluginData, got: %v", err)
 	}
 }
 

@@ -54,8 +54,8 @@ func (k *KustomizePostRenderer) Run(renderedManifests *bytes.Buffer) (*bytes.Buf
 		return nil, fmt.Errorf("failed to parse input: %w", err)
 	}
 
-	// If no KustomizeFiles resource found, pass through the input
-	if result.KustomizeFiles == nil {
+	// If no KustomizePluginData resource found, pass through the input
+	if result.KustomizePluginData == nil {
 		data, err := parser.MarshalResources(result.OtherResources)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal resources: %w", err)
@@ -70,8 +70,8 @@ func (k *KustomizePostRenderer) Run(renderedManifests *bytes.Buffer) (*bytes.Buf
 	}
 	defer tempDir.Cleanup()
 
-	// Extract files from KustomizeFiles resource
-	if err := tempDir.ExtractFiles(result.KustomizeFiles.Files); err != nil {
+	// Extract files from KustomizePluginData resource
+	if err := tempDir.ExtractFiles(result.KustomizePluginData.Files); err != nil {
 		return nil, fmt.Errorf("failed to extract files: %w", err)
 	}
 

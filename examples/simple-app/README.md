@@ -36,10 +36,10 @@ simple-app/
 1. When Helm renders the chart, it produces:
    - A Deployment with 1 replica (from values.yaml)
    - A Service
-   - A KustomizeFiles resource containing the kustomization
+   - A KustomizePluginData resource containing the kustomization
 
 2. The plugin processes the output:
-   - Detects the KustomizeFiles resource
+   - Detects the KustomizePluginData resource
    - Extracts the embedded files to a temporary directory
    - Writes all other resources to `all.yaml`
    - Updates `kustomization.yaml` to reference `all.yaml`
@@ -49,7 +49,7 @@ simple-app/
 3. The final result:
    - Deployment has 3 replicas (patched by kustomize)
    - Deployment has additional `environment: production` label
-   - No KustomizeFiles resource in final output
+   - No KustomizePluginData resource in final output
 
 ## Expected Output
 

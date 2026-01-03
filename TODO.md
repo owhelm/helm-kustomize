@@ -5,10 +5,10 @@
 - [ ] Handle invalid or malformed special resources with helpful error messages
 - [ ] Improve kustomize execution error messages
 - [ ] Add timeout handling for kustomize operations
-- [ ] Test error cases: empty KustomizeFiles, missing kustomization.yaml
+- [ ] Test error cases: empty KustomizePluginData, missing kustomization.yaml
 - [ ] Test error cases: kustomize build failures with clear output
 - [ ] Add structured error messages with context
-- [ ] Validate KustomizeFiles structure before processing
+- [ ] Validate KustomizePluginData structure before processing
 - [ ] Add error recovery suggestions in messages
 - [ ] Test all error paths
 
@@ -16,8 +16,8 @@
 
 - [ ] Makefile: use custom `HELM_PLUGINS` path when testing
 - [ ] Makefile: add shortcut to verify the example simple-app
-- [ ] Add test case: chart without KustomizeFiles (pass-through)
-- [ ] Add test case: malformed KustomizeFiles resource
+- [ ] Add test case: chart without KustomizePluginData (pass-through)
+- [ ] Add test case: malformed KustomizePluginData resource
 - [ ] Add test case: nested directory structures
 - [ ] 100% coverage
 - [ ] Add more edge case tests
