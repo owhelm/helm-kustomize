@@ -64,7 +64,10 @@ func (k *Kustomization) Marshal() ([]byte, error) {
 		return nil, fmt.Errorf("failed to marshal kustomization: %w", err)
 	}
 
-	encoder.Close()
+	if err := encoder.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close encoder: %w", err)
+	}
+
 	return buf.Bytes(), nil
 }
 
