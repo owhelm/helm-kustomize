@@ -30,13 +30,17 @@ func ParseKustomization(data []byte) (*Kustomization, error) {
 
 	// Extract resources if present
 	if resourcesRaw, ok := raw["resources"]; ok {
-		if resourcesList, ok := resourcesRaw.([]any); ok {
-			k.Resources = make([]string, 0, len(resourcesList))
-			for _, r := range resourcesList {
-				if s, ok := r.(string); ok {
-					k.Resources = append(k.Resources, s)
-				}
+		resourcesList, ok := resourcesRaw.([]any)
+		if !ok {
+			return nil, fmt.Errorf("resources field must be an array")
+		}
+		k.Resources = make([]string, 0, len(resourcesList))
+		for i, r := range resourcesList {
+			s, ok := r.(string)
+			if !ok {
+				return nil, fmt.Errorf("resources[%d] must be a string, got %T", i, r)
 			}
+			k.Resources = append(k.Resources, s)
 		}
 	}
 
