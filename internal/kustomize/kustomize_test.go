@@ -1,8 +1,11 @@
 package kustomize
 
 import (
+	"slices"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestParseKustomization(t *testing.T) {
@@ -59,17 +62,12 @@ commonLabels:
 				return
 			}
 
-			if err == nil {
-				if len(k.Resources) != len(tt.wantRes) {
-					t.Errorf("ParseKustomization() got %d resources, want %d", len(k.Resources), len(tt.wantRes))
-					return
-				}
+			if tt.wantErr {
+				return
+			}
 
-				for i, res := range tt.wantRes {
-					if k.Resources[i] != res {
-						t.Errorf("ParseKustomization() resource[%d] = %v, want %v", i, k.Resources[i], res)
-					}
-				}
+			if !slices.Equal(k.Resources, tt.wantRes) {
+				t.Errorf("ParseKustomization() resources = %v, want %v", k.Resources, tt.wantRes)
 			}
 		})
 	}
@@ -148,8 +146,12 @@ func TestKustomization_Marshal(t *testing.T) {
 		Resources: []string{"all.yaml", "base.yaml"},
 		RawContent: map[string]any{
 			"resources": []string{"all.yaml", "base.yaml"},
-			"commonLabels": map[string]any{
-				"app": "myapp",
+			"labels": []map[string]any{
+				{
+					"pairs": map[string]string{
+						"app": "myapp",
+					},
+				},
 			},
 		},
 	}
@@ -159,20 +161,27 @@ func TestKustomization_Marshal(t *testing.T) {
 		t.Fatalf("Marshal() error = %v, want nil", err)
 	}
 
-	str := string(data)
+	want := `labels:
+    - pairs:
+        app: myapp
+resources:
+    - all.yaml
+    - base.yaml
+`
 
-	// Should contain resources
-	if !strings.Contains(str, "all.yaml") {
-		t.Error("Marshal() output should contain all.yaml")
+	var got, expected map[string]any
+	if err := yaml.Unmarshal(data, &got); err != nil {
+		t.Fatalf("Failed to unmarshal output: %v", err)
+	}
+	if err := yaml.Unmarshal([]byte(want), &expected); err != nil {
+		t.Fatalf("Failed to unmarshal expected: %v", err)
 	}
 
-	if !strings.Contains(str, "base.yaml") {
-		t.Error("Marshal() output should contain base.yaml")
-	}
+	gotYAML, _ := yaml.Marshal(got)
+	expectedYAML, _ := yaml.Marshal(expected)
 
-	// Should contain other fields
-	if !strings.Contains(str, "commonLabels") {
-		t.Error("Marshal() output should contain commonLabels")
+	if string(gotYAML) != string(expectedYAML) {
+		t.Errorf("Marshal() output =\n%s\nwant =\n%s", string(gotYAML), string(expectedYAML))
 	}
 }
 
@@ -257,22 +266,30 @@ patches:
 		t.Error("Expected kustomization to be changed")
 	}
 
-	str := string(updated)
+	want := `apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - base.yaml
+    - all.yaml
+commonLabels:
+    app: myapp
+    version: v1
+patches:
+    - path: patch.yaml
+`
 
-	// Should preserve all original fields
-	expectedFields := []string{"apiVersion", "kind", "commonLabels", "patches", "app", "myapp"}
-	for _, field := range expectedFields {
-		if !strings.Contains(str, field) {
-			t.Errorf("Updated kustomization should preserve field: %s", field)
-		}
+	var got, expected map[string]any
+	if err := yaml.Unmarshal(updated, &got); err != nil {
+		t.Fatalf("Failed to unmarshal output: %v", err)
+	}
+	if err := yaml.Unmarshal([]byte(want), &expected); err != nil {
+		t.Fatalf("Failed to unmarshal expected: %v", err)
 	}
 
-	// Should contain both original and new resources
-	if !strings.Contains(str, "base.yaml") {
-		t.Error("Updated kustomization should preserve base.yaml")
-	}
+	gotYAML, _ := yaml.Marshal(got)
+	expectedYAML, _ := yaml.Marshal(expected)
 
-	if !strings.Contains(str, "all.yaml") {
-		t.Error("Updated kustomization should contain all.yaml")
+	if string(gotYAML) != string(expectedYAML) {
+		t.Errorf("EnsureAllYamlInKustomization() output =\n%s\nwant =\n%s", string(gotYAML), string(expectedYAML))
 	}
 }
