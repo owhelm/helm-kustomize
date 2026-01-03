@@ -45,64 +45,6 @@ func TestTempDir_Cleanup(t *testing.T) {
 	}
 }
 
-func TestValidatePath(t *testing.T) {
-	tests := []struct {
-		name    string
-		path    string
-		wantErr bool
-	}{
-		{
-			name:    "simple filename",
-			path:    "file.yaml",
-			wantErr: false,
-		},
-		{
-			name:    "nested path",
-			path:    "patches/deployment.yaml",
-			wantErr: false,
-		},
-		{
-			name:    "deeply nested path",
-			path:    "overlays/production/patches/deployment.yaml",
-			wantErr: false,
-		},
-		{
-			name:    "parent directory traversal",
-			path:    "../etc/passwd",
-			wantErr: true,
-		},
-		{
-			name:    "traversal in middle",
-			path:    "foo/../../../etc/passwd",
-			wantErr: true,
-		},
-		{
-			name:    "absolute path",
-			path:    "/etc/passwd",
-			wantErr: true,
-		},
-		{
-			name:    "current directory reference",
-			path:    "./file.yaml",
-			wantErr: false,
-		},
-		{
-			name:    "multiple slashes",
-			path:    "foo//bar.yaml",
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := ValidatePath(tt.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ValidatePath() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestTempDir_ExtractFiles(t *testing.T) {
 	tempDir, err := NewTempDir()
 	if err != nil {
@@ -162,115 +104,200 @@ func TestTempDir_ExtractFiles_InvalidPath(t *testing.T) {
 }
 
 func TestTempDir_WriteFile(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
+	tests := []struct {
+		name    string
+		path    string
+		content []byte
+		wantErr bool
+	}{
+		{
+			name:    "simple filename",
+			path:    "file.yaml",
+			content: []byte("test content"),
+			wantErr: false,
+		},
+		{
+			name:    "nested path",
+			path:    "patches/deployment.yaml",
+			content: []byte("nested content"),
+			wantErr: false,
+		},
+		{
+			name:    "deeply nested path",
+			path:    "overlays/production/patches/deployment.yaml",
+			content: []byte("deeply nested content"),
+			wantErr: false,
+		},
+		{
+			name:    "parent directory traversal",
+			path:    "../etc/passwd",
+			content: []byte("malicious"),
+			wantErr: true,
+		},
+		{
+			name:    "traversal in middle",
+			path:    "foo/../../../etc/passwd",
+			content: []byte("malicious"),
+			wantErr: true,
+		},
+		{
+			name:    "absolute path",
+			path:    "/etc/passwd",
+			content: []byte("malicious"),
+			wantErr: true,
+		},
+		{
+			name:    "current directory reference",
+			path:    "./file.yaml",
+			content: []byte("test content"),
+			wantErr: false,
+		},
+		{
+			name:    "multiple slashes",
+			path:    "foo//bar.yaml",
+			content: []byte("test content"),
+			wantErr: false,
+		},
 	}
-	defer tempDir.Cleanup()
 
-	content := []byte("test content")
-	err = tempDir.WriteFile("test.yaml", content)
-	if err != nil {
-		t.Fatalf("WriteFile() error = %v, want nil", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := NewTempDir()
+			if err != nil {
+				t.Fatalf("NewTempDir() error = %v", err)
+			}
+			defer tempDir.Cleanup()
 
-	// Verify file was created
-	fullPath := filepath.Join(tempDir.Path, "test.yaml")
-	readContent, err := os.ReadFile(fullPath)
-	if err != nil {
-		t.Fatalf("Failed to read file: %v", err)
-	}
+			err = tempDir.WriteFile(tt.path, tt.content)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WriteFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-	if string(readContent) != string(content) {
-		t.Errorf("File content = %q, want %q", string(readContent), string(content))
-	}
-}
+			// If we expected success, verify the file was created with correct content
+			if !tt.wantErr {
+				fullPath := filepath.Join(tempDir.Path, filepath.Clean(tt.path))
+				readContent, err := os.ReadFile(fullPath)
+				if err != nil {
+					t.Errorf("Failed to read file: %v", err)
+					return
+				}
 
-func TestTempDir_WriteFile_NestedPath(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
-	}
-	defer tempDir.Cleanup()
-
-	content := []byte("nested content")
-	err = tempDir.WriteFile("subdir/nested/test.yaml", content)
-	if err != nil {
-		t.Fatalf("WriteFile() error = %v, want nil", err)
-	}
-
-	// Verify file was created
-	fullPath := filepath.Join(tempDir.Path, "subdir/nested/test.yaml")
-	readContent, err := os.ReadFile(fullPath)
-	if err != nil {
-		t.Fatalf("Failed to read file: %v", err)
-	}
-
-	if string(readContent) != string(content) {
-		t.Errorf("File content = %q, want %q", string(readContent), string(content))
-	}
-}
-
-func TestTempDir_WriteFile_InvalidPath(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
-	}
-	defer tempDir.Cleanup()
-
-	err = tempDir.WriteFile("../../../etc/passwd", []byte("malicious"))
-	if err == nil {
-		t.Fatal("WriteFile() should return error for directory traversal attempt")
+				if string(readContent) != string(tt.content) {
+					t.Errorf("File content = %q, want %q", string(readContent), string(tt.content))
+				}
+			}
+		})
 	}
 }
 
 func TestTempDir_ReadFile(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
+	tests := []struct {
+		name       string
+		path       string
+		content    []byte
+		setupFile  bool
+		wantErr    bool
+		errContain string // expected error substring for validation errors
+	}{
+		{
+			name:      "simple filename",
+			path:      "file.yaml",
+			content:   []byte("test content"),
+			setupFile: true,
+			wantErr:   false,
+		},
+		{
+			name:      "nested path",
+			path:      "patches/deployment.yaml",
+			content:   []byte("nested content"),
+			setupFile: true,
+			wantErr:   false,
+		},
+		{
+			name:      "deeply nested path",
+			path:      "overlays/production/patches/deployment.yaml",
+			content:   []byte("deeply nested content"),
+			setupFile: true,
+			wantErr:   false,
+		},
+		{
+			name:       "parent directory traversal",
+			path:       "../etc/passwd",
+			content:    nil,
+			setupFile:  false,
+			wantErr:    true,
+			errContain: "directory traversal",
+		},
+		{
+			name:       "traversal in middle",
+			path:       "foo/../../../etc/passwd",
+			content:    nil,
+			setupFile:  false,
+			wantErr:    true,
+			errContain: "directory traversal",
+		},
+		{
+			name:       "absolute path",
+			path:       "/etc/passwd",
+			content:    nil,
+			setupFile:  false,
+			wantErr:    true,
+			errContain: "absolute paths are not allowed",
+		},
+		{
+			name:      "current directory reference",
+			path:      "./file.yaml",
+			content:   []byte("test content"),
+			setupFile: true,
+			wantErr:   false,
+		},
+		{
+			name:      "multiple slashes",
+			path:      "foo//bar.yaml",
+			content:   []byte("test content"),
+			setupFile: true,
+			wantErr:   false,
+		},
+		{
+			name:       "nonexistent file",
+			path:       "nonexistent.yaml",
+			content:    nil,
+			setupFile:  false,
+			wantErr:    true,
+			errContain: "failed to read file",
+		},
 	}
-	defer tempDir.Cleanup()
 
-	// Write a file first
-	expectedContent := []byte("test content")
-	err = tempDir.WriteFile("test.yaml", expectedContent)
-	if err != nil {
-		t.Fatalf("WriteFile() error = %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := NewTempDir()
+			if err != nil {
+				t.Fatalf("NewTempDir() error = %v", err)
+			}
+			defer tempDir.Cleanup()
 
-	// Read it back
-	content, err := tempDir.ReadFile("test.yaml")
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v, want nil", err)
-	}
+			// Setup file if needed
+			if tt.setupFile {
+				err = tempDir.WriteFile(tt.path, tt.content)
+				if err != nil {
+					t.Fatalf("WriteFile() setup error = %v", err)
+				}
+			}
 
-	if string(content) != string(expectedContent) {
-		t.Errorf("ReadFile() = %q, want %q", string(content), string(expectedContent))
-	}
-}
+			// Read the file
+			content, err := tempDir.ReadFile(tt.path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReadFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-func TestTempDir_ReadFile_NotExists(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
-	}
-	defer tempDir.Cleanup()
-
-	_, err = tempDir.ReadFile("nonexistent.yaml")
-	if err == nil {
-		t.Fatal("ReadFile() should return error for nonexistent file")
-	}
-}
-
-func TestTempDir_ReadFile_InvalidPath(t *testing.T) {
-	tempDir, err := NewTempDir()
-	if err != nil {
-		t.Fatalf("NewTempDir() error = %v", err)
-	}
-	defer tempDir.Cleanup()
-
-	_, err = tempDir.ReadFile("../../../etc/passwd")
-	if err == nil {
-		t.Fatal("ReadFile() should return error for directory traversal attempt")
+			// If we expected success, verify content matches
+			if !tt.wantErr {
+				if string(content) != string(tt.content) {
+					t.Errorf("ReadFile() = %q, want %q", string(content), string(tt.content))
+				}
+			}
+		})
 	}
 }

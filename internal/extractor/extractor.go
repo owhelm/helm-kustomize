@@ -35,8 +35,8 @@ func (t *TempDir) Cleanup() {
 	}
 }
 
-// ValidatePath checks if a file path is safe (prevents directory traversal)
-func ValidatePath(filePath string) error {
+// validatePath checks if a file path is safe (prevents directory traversal)
+func validatePath(filePath string) error {
 	// Clean the path to resolve any . or .. components
 	cleaned := filepath.Clean(filePath)
 
@@ -67,7 +67,7 @@ func (t *TempDir) ExtractFiles(files map[string]string) error {
 // WriteFile writes content to a file in the temporary directory
 func (t *TempDir) WriteFile(filePath string, content []byte) error {
 	// Validate the path
-	if err := ValidatePath(filePath); err != nil {
+	if err := validatePath(filePath); err != nil {
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (t *TempDir) WriteFile(filePath string, content []byte) error {
 // ReadFile reads a file from the temporary directory
 func (t *TempDir) ReadFile(filePath string) ([]byte, error) {
 	// Validate the path
-	if err := ValidatePath(filePath); err != nil {
+	if err := validatePath(filePath); err != nil {
 		return nil, err
 	}
 
