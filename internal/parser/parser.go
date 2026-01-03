@@ -17,7 +17,6 @@ const (
 type KustomizePluginData struct {
 	APIVersion string            `yaml:"apiVersion"`
 	Kind       string            `yaml:"kind"`
-	Metadata   map[string]any    `yaml:"metadata"`
 	Files      map[string]string `yaml:"files"`
 }
 
@@ -27,19 +26,43 @@ type ParseResult struct {
 	OtherResources      []map[string]any
 }
 
-// IsKustomizePluginDataResource checks if a resource is a KustomizePluginData resource
-func IsKustomizePluginDataResource(resource map[string]any) bool {
-	apiVersion, ok := resource["apiVersion"].(string)
+// tryParseKustomizePluginDataResource attempts to parse a document as KustomizePluginData.
+// Returns the parsed KustomizePluginData and nil error if successful.
+// Returns nil and nil if the document is not a KustomizePluginData resource.
+// Returns nil and error if the document is a KustomizePluginData resource but has invalid structure.
+func tryParseKustomizePluginDataResource(doc map[string]any) (*KustomizePluginData, error) {
+	// Check apiVersion
+	apiVersion, ok := doc["apiVersion"].(string)
 	if !ok || apiVersion != APIVersion {
-		return false
+		return nil, nil
 	}
 
-	kind, ok := resource["kind"].(string)
+	// Check kind
+	kind, ok := doc["kind"].(string)
 	if !ok || kind != Kind {
-		return false
+		return nil, nil
 	}
 
-	return true
+	// Parse files - this is required and must be map[string]string
+	filesRaw, ok := doc["files"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("KustomizePluginData 'files' field must be a map")
+	}
+
+	files := make(map[string]string, len(filesRaw))
+	for k, v := range filesRaw {
+		strVal, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf("KustomizePluginData 'files' values must be strings, got non-string value for key %q", k)
+		}
+		files[k] = strVal
+	}
+
+	return &KustomizePluginData{
+		APIVersion: apiVersion,
+		Kind:       kind,
+		Files:      files,
+	}, nil
 }
 
 // ParseManifests parses YAML input from bytes and separates KustomizePluginData from other resources
@@ -66,24 +89,15 @@ func ParseManifests(data []byte) (*ParseResult, error) {
 			continue
 		}
 
-		if IsKustomizePluginDataResource(doc) {
-			// Parse as KustomizePluginData
-			// We marshal->unmarshal because yaml.v3 doesn't provide direct conversion
-			// from map[string]any to a struct. This is the idiomatic Go approach.
-			var kf KustomizePluginData
-			docBytes, err := yaml.Marshal(doc)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal KustomizePluginData doc: %w", err)
-			}
-			if err := yaml.Unmarshal(docBytes, &kf); err != nil {
-				return nil, fmt.Errorf("failed to parse KustomizePluginData resource: %w", err)
-			}
-
+		kpd, err := tryParseKustomizePluginDataResource(doc)
+		if err != nil {
+			return nil, err
+		}
+		if kpd != nil {
 			if result.KustomizePluginData != nil {
 				return nil, fmt.Errorf("multiple KustomizePluginData resources found, only one is supported")
 			}
-
-			result.KustomizePluginData = &kf
+			result.KustomizePluginData = kpd
 		} else {
 			// Keep as generic resource
 			result.OtherResources = append(result.OtherResources, doc)
