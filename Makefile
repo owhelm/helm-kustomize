@@ -13,6 +13,7 @@ build:
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
 	cp plugin.yaml $(BUILD_DIR)/
+	helm plugin package dist --sign=false
 
 clean: coverage-clean uninstall
 	rm -rf $(BUILD_DIR)
@@ -58,3 +59,6 @@ uninstall:
 
 # Development: uninstall, rebuild, and reinstall
 reinstall: uninstall build install
+
+publish: clean test-all
+	bash -c 'oras push --artifact-type=application/vnd.helm.plugin.v1+json ghcr.io/owhelm/helm-kustomize:latest helm-kustomize-$$(cat plugin.yaml | yq .version).tgz'
