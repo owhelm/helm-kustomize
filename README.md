@@ -9,7 +9,15 @@ A Helm post-renderer plugin to process kustomizations embedded inside a chart.
 
 ## Installation
 
-`helm plugin install oci://ghcr.io/owhelm/helm-kustomize:latest`
+### Helm v4
+
+1. `helm plugin install oci://ghcr.io/owhelm/helm-kustomize:latest`
+
+### Helm v3
+
+1. `oras pull ghcr.io/owhelm/helm-kustomize:latest`
+2. Extract the tarball
+3. Use `helm-kustomize-plugin` as `--post-renderer`
 
 ## Design
 
