@@ -22,7 +22,7 @@ install: build
 	helm plugin install .
 
 uninstall:
-	helm plugin uninstall kustomize
+	helm plugin uninstall kustomize 2>/dev/null || true
 
 # Development: uninstall, rebuild, and reinstall
 reinstall: uninstall build install
