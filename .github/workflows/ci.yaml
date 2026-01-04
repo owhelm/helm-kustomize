@@ -36,8 +36,29 @@ jobs:
       with:
         version: ${{ matrix.helm-version }}
 
-    - name: Run unit tests
-      run: make test-all
+    - name: Run unit tests with coverage
+      run: make coverage-check
+
+    - name: Display coverage summary
+      if: always()
+      run: |
+        echo "=== Coverage Summary ==="
+        go tool cover -func=coverage.out | tail -1 | awk '{print "Overall Coverage: " $3}'
+        echo ""
+        echo "=== Coverage by Package ==="
+        go tool cover -func=coverage.out | grep -E "^github.com/owhelm" | grep -v "total"
+
+    - name: Run integration tests
+      run: make test-integration
+
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.helm-version }}-${{ matrix.kubectl-version }}
+        path: coverage/
+        retention-days: 30
+        if-no-files-found: ignore
 
   lint:
     name: Lint
