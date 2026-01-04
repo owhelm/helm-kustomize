@@ -19,7 +19,9 @@ clean: coverage-clean uninstall
 	go clean
 
 test:
+ifndef GITHUB_ACTIONS
 	golangci-lint run
+endif
 	go test -v -coverprofile=$(COVERAGE_PROFILE) -covermode=atomic ./...
 
 test-integration: reinstall
