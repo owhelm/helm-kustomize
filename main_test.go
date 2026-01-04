@@ -27,12 +27,8 @@ metadata:
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 
-	outputStr := output.String()
-	if !strings.Contains(outputStr, "Service") {
-		t.Error("Expected Service in output")
-	}
-	if !strings.Contains(outputStr, "Deployment") {
-		t.Error("Expected Deployment in output")
+	if output.String() != input.String() {
+		t.Fatalf("Run() output = %v, want %v", output, input)
 	}
 }
 
@@ -443,5 +439,127 @@ files:
 	}
 	if !strings.Contains(err.Error(), "failed to create temp directory") {
 		t.Errorf("Expected error message about failed to create temp directory, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_NoFilesSection(t *testing.T) {
+	// Test that KustomizePluginData without files section returns an error
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err := renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error for KustomizePluginData without files section, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to parse input") && !strings.Contains(err.Error(), "'files' field must be a map") {
+		t.Errorf("Expected error message about files field, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_NoKustomizationYaml(t *testing.T) {
+	// Test that files section without kustomization.yaml returns an error
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  patch.yaml: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: test-service
+      labels:
+        patched: "true"
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err := renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error for files without kustomization.yaml, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to run kustomize") && !strings.Contains(err.Error(), "unable to find") {
+		t.Errorf("Expected error message about missing kustomization.yaml, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_NestedPaths(t *testing.T) {
+	// Test that files with nested directory paths are handled correctly
+	input := bytes.NewBufferString(`---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: test
+        image: nginx:latest
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  kustomization.yaml: |
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    resources:
+      - all.yaml
+    patches:
+      - path: patches/replica-patch.yaml
+  patches/replica-patch.yaml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: test-deployment
+    spec:
+      replicas: 5
+`)
+
+	renderer := &KustomizePostRenderer{}
+	output, err := renderer.Run(input)
+	if err != nil {
+		t.Fatalf("Run() error = %v, want nil", err)
+	}
+
+	expected := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - image: nginx:latest
+        name: test
+`
+
+	if output.String() != expected {
+		t.Errorf("Output mismatch.\nExpected:\n%s\nGot:\n%s", expected, output.String())
 	}
 }
