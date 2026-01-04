@@ -4,6 +4,7 @@ BINARY_NAME=helm-kustomize-plugin
 BUILD_DIR=dist
 
 build:
+	go fmt ./...
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
 	cp plugin.yaml $(BUILD_DIR)/
@@ -13,6 +14,7 @@ clean:
 	go clean
 
 test:
+	golangci-lint run
 	go test -v ./...
 
 test-integration: reinstall

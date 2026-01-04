@@ -15,12 +15,18 @@ This is a Helm v4 post-renderer plugin that integrates Kustomize transformations
 ## Build and Test Commands
 
 ```bash
-# Build the plugin binary
+# Build the plugin binary (automatically runs go fmt)
 make build
 
-# Run unit tests
+# Format code manually
+go fmt ./...
+
+# Run unit tests (automatically runs golangci-lint)
 make test
 go test -v ./...
+
+# Run linter manually
+golangci-lint run
 
 # Run a specific test
 go test -v ./internal/parser -run TestParseManifests
