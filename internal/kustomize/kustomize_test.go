@@ -46,8 +46,11 @@ patches:
 kind: Kustomization
 resources:
 - base.yaml
-commonLabels:
-  app: myapp
+labels:
+- includeSelectors: true
+  includeTemplates: true
+  pairs:
+    app: myapp
 `,
 			wantRes: []string{"base.yaml"},
 			wantErr: false,
@@ -276,9 +279,12 @@ func TestEnsureAllYamlInKustomization_PreservesOtherFields(t *testing.T) {
 kind: Kustomization
 resources:
 - base.yaml
-commonLabels:
-  app: myapp
-  version: v1
+labels:
+- includeSelectors: true
+  includeTemplates: true
+  pairs:
+    app: myapp
+    version: v1
 patches:
 - path: patch.yaml
 `
@@ -297,9 +303,12 @@ kind: Kustomization
 resources:
     - base.yaml
     - all.yaml
-commonLabels:
-    app: myapp
-    version: v1
+labels:
+    - includeSelectors: true
+      includeTemplates: true
+      pairs:
+        app: myapp
+        version: v1
 patches:
     - path: patch.yaml
 `

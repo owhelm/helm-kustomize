@@ -3,7 +3,7 @@
 
 BINARY_NAME=helm-kustomize-plugin
 BUILD_DIR=dist
-COVERAGE_THRESHOLD=70
+COVERAGE_THRESHOLD=80
 COVERAGE_PROFILE=coverage.out
 COVERAGE_HTML=coverage.html
 COVERAGE_DIR=coverage

@@ -132,3 +132,16 @@ files:
 - Unit tests use table-driven patterns with `t.Run()` subtests
 - Integration tests in `test-integration.sh` test the full plugin with actual Helm charts
 - Example charts in `examples/` directory serve as test fixtures and documentation
+- **YAML Output Assertions**: When testing functions that produce YAML output, assert against the final YAML string directly rather than parsing and checking individual fields. This ensures exact output validation and catches formatting issues.
+
+## Kustomize API Preferences
+
+- **NEVER** use deprecated `commonLabels` (deprecated in Kustomize v5.3+). Use `labels` field instead:
+  ```yaml
+  labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app: myapp
+  ```
+- `commonAnnotations` is NOT deprecated and can still be used

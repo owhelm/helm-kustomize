@@ -106,10 +106,13 @@ files:
     resources:
     - all.yaml
 
-    commonLabels:
-      team: platform
-      cost-center: engineering
-      compliance: pci
+    labels:
+    - includeSelectors: true
+      includeTemplates: true
+      pairs:
+        team: platform
+        cost-center: engineering
+        compliance: pci
 
     commonAnnotations:
       managed-by: platform-team
