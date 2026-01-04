@@ -8,8 +8,13 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (Helm ${{ matrix.helm-version }}, kubectl ${{ matrix.kubectl-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        helm-version: ['v4.0.4']
+        kubectl-version: ['latest']
 
     steps:
     - name: Checkout code
@@ -24,12 +29,12 @@ jobs:
     - name: Install kubectl
       uses: azure/setup-kubectl@v4
       with:
-        version: 'latest'
+        version: ${{ matrix.kubectl-version }}
 
     - name: Install Helm
       uses: azure/setup-helm@v4
       with:
-        version: 'v4.0.0'
+        version: ${{ matrix.helm-version }}
 
     - name: Run unit tests
       run: make test-all

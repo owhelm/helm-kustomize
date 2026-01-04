@@ -50,9 +50,11 @@
 - [x] Set up CI/CD pipeline
 - [ ] Create release automation
 - [ ] Add version management
+- [ ] Set up renovate for ci.yaml
 
 ## Future Enhancements
 
 - [ ] Support for multiple kustomization files
 - [ ] Configurable resource naming (alternative to `all.yaml`)
 - [ ] Performance optimization for large charts
+- [ ] Support helm v3
